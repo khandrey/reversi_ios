@@ -6,8 +6,13 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		A0A5F8302F2FF72300BA3ABA /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = A0A5F82F2F2FF72300BA3ABA /* Localizable.xcstrings */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		A0A5F7D22F2F79CC00BA3ABA /* Reversi Classic.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Reversi Classic.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		A0A5F82F2F2FF72300BA3ABA /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
@@ -16,8 +21,8 @@
 			buildPhase = A0A5F7D02F2F79CC00BA3ABA /* Resources */;
 			membershipExceptions = (
 				GameView.swift,
+				ReversiAI.swift,
 				ReversiEngine.swift,
-				SimpleAI.swift,
 			);
 		};
 /* End PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
@@ -47,6 +52,7 @@
 		A0A5F7C92F2F79CC00BA3ABA = {
 			isa = PBXGroup;
 			children = (
+				A0A5F82F2F2FF72300BA3ABA /* Localizable.xcstrings */,
 				A0A5F7D42F2F79CC00BA3ABA /* Reversi Classic */,
 				A0A5F7D32F2F79CC00BA3ABA /* Products */,
 			);
@@ -106,6 +112,7 @@
 			knownRegions = (
 				en,
 				Base,
+				ru,
 			);
 			mainGroup = A0A5F7C92F2F79CC00BA3ABA;
 			minimizedProjectReferenceProxies = 1;
@@ -124,6 +131,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A0A5F8302F2FF72300BA3ABA /* Localizable.xcstrings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -200,6 +208,7 @@
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
 			name = Debug;
@@ -257,6 +266,7 @@
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;
 				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_EMIT_LOC_STRINGS = YES;
 				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;

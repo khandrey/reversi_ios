@@ -17,7 +17,15 @@ struct GameView: View {
     @State private var cascadeDelay: [Move: Double] = [:]
     
     @State private var prevBoard: [[Disc]] = []
+    
+    @State private var aiNotBefore: Date = .distantPast
 
+    private let flipDuration: Double = 0.52   // как в DiscFlipView для flip
+    private let dropDuration: Double = 0.35   // empty -> stone
+    private let animBuffer: Double = 0.08     // небольшой запас
+    
+    // @State private var difficulty: AIDifficulty = .easy
+    let difficulty: AIDifficulty
     
     private let player: Disc = .black
     private let ai: Disc = .white
@@ -32,7 +40,18 @@ struct GameView: View {
                 boardView
                     .padding(.horizontal, 12)
 
-                footer
+                if thinking {
+                    
+                    Text(LocalizedStringKey("iPhone_thinking"))
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(.yellow)
+                        .padding(.vertical, 6)
+                        .padding(.horizontal, 12)
+                        .background(.black.opacity(0.35))
+                        .clipShape(Capsule())
+                }
+                
+                // footer
 
                 Spacer(minLength: 0)
             }
@@ -71,22 +90,32 @@ struct GameView: View {
                 Text(gameOverText())
                     .font(.headline)
                     .padding(.top, 4)
-            } else if thinking {
-                Text("iPhone thinking…")
+            }
+            /*
+            else if thinking {
+                Text("iPhone turn")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
+                    .foregroundColor(.yellow)
             } else {
                 Text(engine.currentTurn == player ? "Your turn" : "iPhone turn")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
+                    .foregroundColor(.yellow)
             }
+             */
         }
     }
 
     
     
     private var turnBadge: some View {
+        
+        
+        
         HStack(spacing: 10) {
+            // var turn_color: Color = .white
+            // if(engine.currentTurn == player) { turn_color = .black }
             Circle()
                 .frame(width: 14, height: 14)
                 .opacity(0) // place for lamp for future
@@ -95,18 +124,23 @@ struct GameView: View {
                         .frame(width: 14, height: 14)
                         .opacity(1)
                 )
+                .foregroundColor(engine.currentTurn == player ? .black : .white)
 
-            Text(engine.currentTurn == player ? "● You (black)" : "● iPhone (white)")
+            Text(engine.currentTurn == player ? LocalizedStringKey("your_turn") : LocalizedStringKey("iphone_turn"))
                 .font(.headline)
         }
+        .padding(.vertical, 6)
+        .padding(.horizontal, 10)
+        .background(.thinMaterial)
+        .clipShape(RoundedRectangle(cornerRadius: 12))
     }
 
     private var scoreBadge: some View {
         let b = engine.count(.black)
         let w = engine.count(.white)
         return HStack(spacing: 12) {
-            Text("Black: \(b)")
-            Text("White: \(w)")
+            Text("\(String(localized:"black")): \(b)")
+            Text("\(String(localized:"white")): \(w)")
         }
         .font(.subheadline)
         .padding(.vertical, 6)
@@ -114,7 +148,7 @@ struct GameView: View {
         .background(.thinMaterial)
         .clipShape(RoundedRectangle(cornerRadius: 12))
     }
-
+/*
     private var footer: some View {
         let playerMoves = engine.validMoves(for: player).count
         let aiMoves = engine.validMoves(for: ai).count
@@ -142,7 +176,7 @@ struct GameView: View {
             }
         }
     }
-
+*/
     private var boardView: some View {
         let possible = Set(engine.validMoves(for: engine.currentTurn))
 
@@ -231,7 +265,17 @@ struct GameView: View {
 
         if let changed = engine.applyMove(origin) {
             buildCascadeDelay(changed: changed, origin: origin)
+            armAIAfterBoardAnimation()
         }
+    }
+
+    
+    private func armAIAfterBoardAnimation() {
+        let maxDelay = cascadeDelay.values.max() ?? 0
+        // При ходе всегда есть постановка + часть клеток flip.
+        // Берём “самую длинную” разумную оценку.
+        let total = maxDelay + max(flipDuration, dropDuration) + animBuffer
+        aiNotBefore = Date().addingTimeInterval(total)
     }
 
     
@@ -264,13 +308,59 @@ struct GameView: View {
         cascadeDelay = map
     }
 
-
     private func maybeAIMove() {
         guard !engine.isGameOver else { return }
         guard engine.currentTurn == ai else { return }
         guard !thinking else { return }
 
-        let move = SimpleAI.chooseMove(engine: engine, for: ai)
+        let now = Date()
+        if now < aiNotBefore {
+            let wait = aiNotBefore.timeIntervalSince(now)
+            DispatchQueue.main.asyncAfter(deadline: .now() + wait) {
+                maybeAIMove()
+            }
+            return
+        }
+
+        startAIMoveComputation()
+    }
+
+    private func startAIMoveComputation() {
+        thinking = true
+
+        let snapshot = engine
+        let difficultySnapshot = difficulty
+
+        Task.detached(priority: .userInitiated) {
+            let move = ReversiAI.chooseMove(engine: snapshot, for: ai, difficulty: difficultySnapshot)
+
+            await MainActor.run {
+                defer { thinking = false }
+
+                guard let move else {
+                    
+                    engine.ensureTurnIsPlayableOrGameOver()
+                    return
+                }
+
+                prevBoard = engine.board
+                if let changed = engine.applyMove(move) {
+                    buildCascadeDelay(changed: changed, origin: move)
+                }
+            }
+        }
+    }
+
+    
+    /*
+    private func maybeAIMove() {
+        guard !engine.isGameOver else { return }
+        guard engine.currentTurn == ai else { return }
+        guard !thinking else { return }
+
+        // let move = SimpleAI.chooseMove(engine: engine, for: ai)
+        let move = ReversiAI.chooseMove(engine: engine, for: ai, difficulty: difficulty)
+        
         if move == nil {
             
             engine.ensureTurnIsPlayableOrGameOver()
@@ -289,7 +379,8 @@ struct GameView: View {
         }
 
     }
-
+*/
+    
     private func gameOverText() -> String {
         let b = engine.count(.black)
         let w = engine.count(.white)

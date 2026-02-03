@@ -32,9 +32,10 @@ struct MainMenuView: View {
                 
                 VStack(alignment: .center, spacing: 16) {
                     NavigationLink {
-                        GameView()
+                        // GameView()
+                        DifficultySelectView()
                     } label: {
-                        menuButton(title: "Начать игру", availableWidth: geo.size.width)
+                        menuButton(title: String(localized:"single_player"), availableWidth: geo.size.width)
                     }
                     .buttonStyle(.plain)
 
