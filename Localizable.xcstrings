@@ -181,6 +181,23 @@
         }
       }
     },
+    "ok" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OK"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OK"
+          }
+        }
+      }
+    },
     "select_difficulty_title" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -211,6 +228,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Одиночная игра"
+          }
+        }
+      }
+    },
+    "start_again" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start again"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Начать заново"
           }
         }
       }

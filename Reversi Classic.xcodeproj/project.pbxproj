@@ -15,24 +15,9 @@
 		A0A5F82F2F2FF72300BA3ABA /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
-/* Begin PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
-		A0A5F7E72F2F7CD100BA3ABA /* Exceptions for "Reversi Classic" folder in "Copy Bundle Resources" phase from "Reversi Classic" target */ = {
-			isa = PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet;
-			buildPhase = A0A5F7D02F2F79CC00BA3ABA /* Resources */;
-			membershipExceptions = (
-				GameView.swift,
-				ReversiAI.swift,
-				ReversiEngine.swift,
-			);
-		};
-/* End PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
-
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		A0A5F7D42F2F79CC00BA3ABA /* Reversi Classic */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				A0A5F7E72F2F7CD100BA3ABA /* Exceptions for "Reversi Classic" folder in "Copy Bundle Resources" phase from "Reversi Classic" target */,
-			);
 			path = "Reversi Classic";
 			sourceTree = "<group>";
 		};

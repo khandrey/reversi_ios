@@ -22,6 +22,7 @@ struct GameView: View {
     @State private var boardRevision: Int = 0
     
     @State private var animStart: Date = .distantPast
+    @State private var showGameOverOverlay = false
 
     
     private let flipDuration: Double = 0.52   // как в DiscFlipView для flip
@@ -60,6 +61,22 @@ struct GameView: View {
                 Spacer(minLength: 0)
             }
             .padding(.top, 10)
+            
+            if showGameOverOverlay {
+                GameOverOverlay(
+                    outcome: currentOutcome(),
+                    onDismiss: { showGameOverOverlay = false },
+                    onRestart: {
+                        engine.reset()
+                        prevBoard = engine.board
+                        cascadeDelay = [:]
+                        animStart = Date()
+                        thinking = false
+                        showGameOverOverlay = false
+                    }
+                )
+            }
+            
         }
         .navigationBarHidden(true)
         .safeAreaInset(edge: .top, spacing: 0) {
@@ -93,9 +110,12 @@ struct GameView: View {
             .padding(.horizontal, 16)
 
             if engine.isGameOver {
+                /*
                 Text(gameOverText())
                     .font(.headline)
                     .padding(.top, 4)
+                 */
+                
             }
             /*
             else if thinking {
@@ -289,6 +309,10 @@ struct GameView: View {
             bumpBoardRevision()
             animStart = Date()
             armAIAfterBoardAnimation()
+            if engine.isGameOver {
+                showGameOverOverlay = true
+            }
+
         }
     }
 
@@ -374,6 +398,10 @@ struct GameView: View {
                     buildCascadeDelay(changed: changed, origin: move)
                     bumpBoardRevision()
                     animStart = Date()
+                    if engine.isGameOver {
+                        showGameOverOverlay = true
+                    }
+
                 }
             }
         }
@@ -415,6 +443,14 @@ struct GameView: View {
         if b > w { return "Win! \(b) : \(w)" }
         if w > b { return "Lose. \(b) : \(w)" }
         return "Dead heat. \(b) : \(w)"
+    }
+    
+    private func currentOutcome() -> GameOutcome {
+        let myCount = engine.count(player)
+        let aiCount = engine.count(ai)
+        if myCount > aiCount { return .playerWin }
+        if aiCount > myCount { return .aiWin }
+        return .draw
     }
 }
 
