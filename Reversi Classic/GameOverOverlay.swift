@@ -59,11 +59,29 @@ struct GameOverOverlay: View {
         }
         .transition(.opacity)
     }
-
+/*
     private var languageCode: String {
         locale.language.languageCode?.identifier ?? "en"
     }
+*/
+    private var languageCode: String {
+        let code = locale.language.languageCode?.identifier ?? "en"
 
+        switch code {
+        case "ru":
+            return "ru"
+        case "ja":
+            return "ja"
+        case "zh":
+            return "zh"
+        case "de":
+            return "de"
+        default:
+            return "en"
+        }
+    }
+
+    /*
     private var assetName: String {
         let lang = (languageCode == "ru") ? "ru" : "en"
 
@@ -76,4 +94,19 @@ struct GameOverOverlay: View {
             return "GameOver_Draw_\(lang)"
         }
     }
+     */
+    
+    private var assetName: String {
+        let lang = languageCode   // ru / en / ja
+
+        switch outcome {
+        case .playerWin:
+            return "GameOver_PlayerWin_\(lang)"
+        case .aiWin:
+            return "GameOver_AIWin_\(lang)"
+        case .draw:
+            return "GameOver_Draw_\(lang)"
+        }
+    }
+
 }
