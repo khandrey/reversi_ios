@@ -12,6 +12,7 @@ struct DiscFlipView: View {
     let to: Disc
     let size: CGFloat
     let delay: Double
+    let revision: Int
 
     @State private var progress: Double = 1.0
     @State private var scheduled: DispatchWorkItem?
@@ -62,7 +63,8 @@ struct DiscFlipView: View {
 
     
     private var key: String {
-        "\(from.rawValue)-\(to.rawValue)-\(delay)"
+        // "\(from.rawValue)-\(to.rawValue)-\(delay)"
+        "\(from.rawValue)-\(to.rawValue)-\(delay)-\(revision)"
     }
 
     private func cancel() {
@@ -71,6 +73,69 @@ struct DiscFlipView: View {
         token = UUID()
     }
 
+    private func startIfNeeded() {
+        cancel()
+
+        
+        guard from != to else {
+            withTransaction(Transaction(animation: nil)) {
+                progress = 1.0
+            }
+            return
+        }
+
+        
+        withTransaction(Transaction(animation: nil)) {
+            progress = 0.0
+        }
+
+        let myToken = token
+
+        
+        let work = DispatchWorkItem {
+            guard myToken == token else { return }
+
+            let isDrop = (from == .empty && to != .empty)
+            let isFadeOut = (from != .empty && to == .empty)
+
+            let duration: Double
+            if isDrop {
+                duration = 0.35
+                DispatchQueue.main.async {
+                    guard myToken == token else { return }
+                    withAnimation(.spring(response: duration, dampingFraction: 0.72)) {
+                        progress = 1.0
+                    }
+                }
+            } else if isFadeOut {
+                duration = 0.18
+                DispatchQueue.main.async {
+                    guard myToken == token else { return }
+                    withAnimation(.easeInOut(duration: duration)) {
+                        progress = 1.0
+                    }
+                }
+            } else {
+                duration = 0.52
+                DispatchQueue.main.async {
+                    guard myToken == token else { return }
+                    withAnimation(.easeInOut(duration: duration)) {
+                        progress = 1.0
+                    }
+                }
+            }
+        }
+
+        scheduled = work
+        
+        // DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: work)
+        let minFrameDelay = 1.0 / 60.0
+        DispatchQueue.main.asyncAfter(deadline: .now() + max(delay, minFrameDelay), execute: work)
+
+    }
+
+    
+    /*
     private func startIfNeeded() {
         cancel()
 
@@ -109,6 +174,7 @@ struct DiscFlipView: View {
         scheduled = work
         DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: work)
     }
+    */
 
     @ViewBuilder
     private func discImage(_ disc: Disc) -> some View {

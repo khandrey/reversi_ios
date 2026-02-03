@@ -19,7 +19,11 @@ struct GameView: View {
     @State private var prevBoard: [[Disc]] = []
     
     @State private var aiNotBefore: Date = .distantPast
+    @State private var boardRevision: Int = 0
+    
+    @State private var animStart: Date = .distantPast
 
+    
     private let flipDuration: Double = 0.52   // как в DiscFlipView для flip
     private let dropDuration: Double = 0.35   // empty -> stone
     private let animBuffer: Double = 0.08     // небольшой запас
@@ -66,6 +70,8 @@ struct GameView: View {
                     prevBoard = engine.board
                     thinking = false
                     cascadeDelay = [:]
+                    bumpBoardRevision()
+                    animStart = Date()
                 }
             )
         }
@@ -194,7 +200,7 @@ struct GameView: View {
 
                             let current = engine.board[r][c]
                             let previous = (prevBoard.isEmpty ? current : prevBoard[r][c])
-
+                            let d = delay(for: Move(r: r, c: c))
                             
                             ZStack {
                                 Rectangle()
@@ -209,13 +215,30 @@ struct GameView: View {
                                         .frame(width: cell * 0.28, height: cell * 0.28)
                                 }
 
-                                
+                                /*
                                 DiscFlipView(
                                     from: previous,
                                     to: current,
                                     size: cell * 0.78,
                                     delay: delay(for: move)
                                 )
+                                 
+                                DiscFlipView(
+                                    from: previous,
+                                    to: current,
+                                    size: cell * 0.78,
+                                    delay: delay(for: move),
+                                    revision: boardRevision
+                                )
+                                 */
+                                DiscTimelineView(
+                                    from: previous,
+                                    to: current,
+                                    size: cell * 0.78,
+                                    delay: d,
+                                    animStart: animStart
+                                )
+
                             }
                             .frame(width: cell, height: cell)
                             .contentShape(Rectangle())
@@ -261,14 +284,17 @@ struct GameView: View {
         let origin = Move(r: r, c: c)
 
         prevBoard = engine.board
-
-
         if let changed = engine.applyMove(origin) {
             buildCascadeDelay(changed: changed, origin: origin)
+            bumpBoardRevision()
+            animStart = Date()
             armAIAfterBoardAnimation()
         }
     }
 
+    private func bumpBoardRevision() {
+        boardRevision &+= 1
+    }
     
     private func armAIAfterBoardAnimation() {
         let maxDelay = cascadeDelay.values.max() ?? 0
@@ -346,6 +372,8 @@ struct GameView: View {
                 prevBoard = engine.board
                 if let changed = engine.applyMove(move) {
                     buildCascadeDelay(changed: changed, origin: move)
+                    bumpBoardRevision()
+                    animStart = Date()
                 }
             }
         }
