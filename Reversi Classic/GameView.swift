@@ -24,6 +24,7 @@ struct GameView: View {
     @State private var animStart: Date = .distantPast
     @State private var showGameOverOverlay = false
 
+    @State private var flipSoundToken: UUID = UUID()
     
     private let flipDuration: Double = 0.52   // как в DiscFlipView для flip
     private let dropDuration: Double = 0.35   // empty -> stone
@@ -68,6 +69,7 @@ struct GameView: View {
                     onDismiss: { showGameOverOverlay = false },
                     onRestart: {
                         engine.reset()
+                        flipSoundToken = UUID()
                         prevBoard = engine.board
                         cascadeDelay = [:]
                         animStart = Date()
@@ -84,6 +86,7 @@ struct GameView: View {
                 onBack: { dismiss() },
                 onRestart: {
                     engine.reset()
+                    flipSoundToken = UUID()
                     prevBoard = engine.board
                     thinking = false
                     cascadeDelay = [:]
@@ -305,8 +308,10 @@ struct GameView: View {
 
         prevBoard = engine.board
         if let changed = engine.applyMove(origin) {
+            SoundManager.shared.playMove()
             buildCascadeDelay(changed: changed, origin: origin)
             bumpBoardRevision()
+            scheduleFlipSounds(from: cascadeDelay, changed: changed, origin: origin)
             animStart = Date()
             armAIAfterBoardAnimation()
             if engine.isGameOver {
@@ -334,7 +339,7 @@ struct GameView: View {
     }
     private func buildCascadeDelay(changed: [Move], origin: Move) {
         
-        let step: Double = 0.07   // задержка между "кольцами"
+        let step: Double = 0.07   // задержка между шагми каскада
         
 
         // Сортируем по расстоянию от клетки хода (Chebyshev — как “квадратные кольца”)
@@ -375,6 +380,38 @@ struct GameView: View {
         startAIMoveComputation()
     }
 
+    private func scheduleFlipSounds(from cascade: [Move: Double], changed: [Move], origin: Move) {
+        // отменяем старые расписания (через токен)
+        let token = UUID()
+        flipSoundToken = token
+
+        
+        func dist(_ m: Move) -> Int {
+            max(abs(m.r - origin.r), abs(m.c - origin.c))
+        }
+
+        
+        var ringMinDelay: [Int: Double] = [:]
+        for m in changed {
+            let ring = dist(m)
+            let d = cascade[m] ?? 0
+            if let cur = ringMinDelay[ring] {
+                ringMinDelay[ring] = min(cur, d)
+            } else {
+                ringMinDelay[ring] = d
+            }
+        }
+
+        
+        for ring in ringMinDelay.keys.sorted() {
+            let d = ringMinDelay[ring] ?? 0
+            DispatchQueue.main.asyncAfter(deadline: .now() + d) {
+                guard flipSoundToken == token else { return }
+                SoundManager.shared.playFlip()
+            }
+        }
+    }
+    
     private func startAIMoveComputation() {
         thinking = true
 
@@ -395,8 +432,10 @@ struct GameView: View {
 
                 prevBoard = engine.board
                 if let changed = engine.applyMove(move) {
+                    SoundManager.shared.playMove()
                     buildCascadeDelay(changed: changed, origin: move)
                     bumpBoardRevision()
+                    scheduleFlipSounds(from: cascadeDelay, changed: changed, origin: move)
                     animStart = Date()
                     if engine.isGameOver {
                         showGameOverOverlay = true
